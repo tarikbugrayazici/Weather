@@ -34,7 +34,6 @@ class MainActivityAdapter(
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(
         holder: MainActivityAdapterHolder,
         position: Int
@@ -50,7 +49,7 @@ class MainActivityAdapter(
             holder.day.text = days
             Glide
                 .with(context)
-                .load("http:" + forcastday.day.condition!!.icon)
+                .load("https:" + forcastday.day.condition!!.icon)
                 .override(95, 95)
                 .into(holder.weatherImageRecyclerView)
             holder.day.setOnClickListener {

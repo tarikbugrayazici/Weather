@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class RetrofitService {
     companion object {
-        private val BASE_URL = "http://api.weatherapi.com/v1/"
+        private val BASE_URL = "https://api.weatherapi.com/v1/"
         private var retrofit: Retrofit? = null
 
         fun getRetrofit(): Retrofit? {
