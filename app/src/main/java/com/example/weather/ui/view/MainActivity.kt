@@ -1,19 +1,22 @@
 package com.example.weather.ui.view
 
 import android.Manifest
-import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
-import android.widget.TextView
+import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.annotation.StyleRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,8 +27,10 @@ import com.example.weather.data.entity.BaseEntity
 import com.example.weather.data.entity.Forcastday
 import com.example.weather.data.service.API
 import com.example.weather.data.service.RetrofitService
+import com.example.weather.ui.SharedPref
 import com.example.weather.ui.adapter.MainActivityAdapter
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Response
 import java.util.*
@@ -42,14 +47,36 @@ class MainActivity : AppCompatActivity() {
     lateinit var mFusedLocationClient: FusedLocationProviderClient
     private val TAG = "PermissionDemo"
     private val REQUEST_CODE = 101
+    internal lateinit var mSharedPref: SharedPref
+    private val myPreferences: String = "nightMode"
+    private val key: String = "isNightMode"
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
+        mSharedPref = SharedPref(this)
+        if (mSharedPref.loadNightModeState() === true) {
+            setTheme(R.style.DarkTheme);
+        } else {
+            setTheme(R.style.LightTheme);
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        recyclerView.visibility = View.GONE
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
         checkPermission()
+        if (mSharedPref.loadNightModeState() == true)
+            toggle.isChecked = true
+
+        toggle.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                mSharedPref.setNightModeState(true)
+            } else {
+                mSharedPref.setNightModeState(false)
+            }
+            finish()
+            startActivity(getIntent())
+        }
+
     }
 
     override fun onRequestPermissionsResult(
@@ -69,11 +96,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun getLastLocation() {
         mFusedLocationClient.lastLocation.addOnCompleteListener(this) { task ->
             var location: Location? = task.result
-
             longtitude = location!!.longitude
             latitude = location.latitude
             val geocoder = Geocoder(
@@ -135,6 +160,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setRecyclerView(list: ArrayList<Forcastday>) {
+        recyclerView.visibility = View.VISIBLE
+        progressBar.visibility = View.GONE
         liste.addAll(list)
         setItems(0)
         layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)

@@ -1,6 +1,8 @@
 package com.example.weather.ui.adapter
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
@@ -26,6 +28,7 @@ class MainActivityAdapter(
     private var listener: (Int) -> Unit
 ) :
     RecyclerView.Adapter<MainActivityAdapter.MainActivityAdapterHolder>() {
+    private var rowIndex = 0
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainActivityAdapterHolder {
         return MainActivityAdapterHolder(
             LayoutInflater
@@ -34,12 +37,14 @@ class MainActivityAdapter(
         )
     }
 
+    @SuppressLint("ResourceAsColor")
     override fun onBindViewHolder(
         holder: MainActivityAdapterHolder,
         position: Int
     ) {
 
         val forcastday = list[position]
+
         for (day in list) {
             holder.degreeRecyclerView.text =
                 forcastday.day!!.avgtemp_c!!.toInt().toString() + "\u00B0" //2020-04-23
@@ -52,9 +57,18 @@ class MainActivityAdapter(
                 .load("https:" + forcastday.day.condition!!.icon)
                 .override(95, 95)
                 .into(holder.weatherImageRecyclerView)
-            holder.day.setOnClickListener {
+            holder.itemView.setOnClickListener {
                 listener(position)
+                rowIndex = position
+                notifyDataSetChanged()
             }
+
+            if (rowIndex == position) {
+                holder.itemView.setBackgroundColor(Color.parseColor("#bbe5ff"))
+            } else {
+                holder.itemView.setBackgroundColor(Color.parseColor("#f9f9f9"))
+            }
+
         }
     }
 

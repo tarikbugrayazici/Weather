@@ -4,5 +4,7 @@ data class Forcastday(
     val date: String? = null,
     val date_epoch: Int? = null,
     val day: Day? = null,
-    val astro: Astro? = null
-    )
+    val astro: Astro? = null,
+    var isSelected: Boolean = false
+
+)
