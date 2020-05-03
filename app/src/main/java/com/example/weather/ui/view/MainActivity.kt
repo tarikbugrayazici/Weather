@@ -27,6 +27,7 @@ import com.example.weather.data.entity.BaseEntity
 import com.example.weather.data.entity.Forcastday
 import com.example.weather.data.service.API
 import com.example.weather.data.service.RetrofitService
+import com.example.weather.ui.Repository
 import com.example.weather.ui.SharedPref
 import com.example.weather.ui.adapter.MainActivityAdapter
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -114,7 +115,8 @@ class MainActivity : AppCompatActivity() {
                 ) as ArrayList<Address>
             cityName = address.get(0).adminArea
             locationAddress.text = cityName
-            service(cityName)
+            val repository = Repository()
+            repository.service(cityName!!) { list -> setRecyclerView(list!!) }
 
         }
     }
@@ -142,22 +144,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun service(cityName: String?) {
-        val retrofit: API = RetrofitService.getRetrofit()!!.create(API::class.java)
-        val call = retrofit.getWeather(Constants.API_KEY, cityName!!, 7)
-        call.enqueue(object : retrofit2.Callback<BaseEntity> {
-            override fun onResponse(
-                call: retrofit2.Call<BaseEntity>,
-                response: Response<BaseEntity>
-            ) {
-                setRecyclerView(response.body()!!.forecast!!.forecastday)
-            }
-
-            override fun onFailure(call: retrofit2.Call<BaseEntity>, t: Throwable) {
-                System.out.println("hata" + t)
-            }
-        })
-    }
 
     private fun setRecyclerView(list: ArrayList<Forcastday>) {
         recyclerView.visibility = View.VISIBLE
