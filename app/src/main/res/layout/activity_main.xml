@@ -70,7 +70,7 @@
             android:id="@+id/progressBar"
             android:layout_width="150dp"
             android:layout_height="150dp"
-            android:layout_marginLeft="120dp" />
+            android:layout_marginLeft="170dp" />
     </LinearLayout>
 
     <LinearLayout

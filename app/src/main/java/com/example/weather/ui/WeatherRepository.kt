@@ -1,6 +1,6 @@
 package com.example.weather.ui
 
-import com.example.weather.data.Constants
+import com.example.weather.core.util.Constants
 import com.example.weather.data.entity.BaseEntity
 import com.example.weather.data.entity.Forcastday
 import com.example.weather.data.service.API
@@ -8,8 +8,6 @@ import com.example.weather.data.service.RetrofitService
 import retrofit2.Response
 
 class WeatherRepository() {
-
-    private var weather = ArrayList<Forcastday>()
 
     fun getWeatherForecast(cityName: String, block: (ArrayList<Forcastday>?) -> Unit) {
         val retrofit: API = RetrofitService.getRetrofit()!!.create(API::class.java)

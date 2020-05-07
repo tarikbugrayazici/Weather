@@ -14,8 +14,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.example.weather.PermissionHelper
+import com.example.weather.core.helper.PermissionHelper
 import com.example.weather.R
+import com.example.weather.core.extenions.loadFromUrl
+import com.example.weather.core.extenions.showToast
+import com.example.weather.core.util.Constants
 import com.example.weather.data.entity.Forcastday
 import com.example.weather.ui.SharedPref
 import com.example.weather.ui.adapter.MainActivityAdapter
@@ -37,7 +40,11 @@ class MainActivity : AppCompatActivity() {
     internal lateinit var mSharedPref: SharedPref
     private val REQUEST_CODE = 101
     private lateinit var viewModel: MainActivityViewModel
-    private val permissionHelper: PermissionHelper by lazy { PermissionHelper(this) }
+    private val permissionHelper: PermissionHelper by lazy {
+        PermissionHelper(
+            this
+        )
+    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         recyclerView.visibility = View.GONE
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         permissionHelper.checkPermission { getLastLocation() }
@@ -79,10 +87,10 @@ class MainActivity : AppCompatActivity() {
             REQUEST_CODE -> {
 
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    Toast.makeText(this, "permission granted", Toast.LENGTH_LONG).show()
+                    this.showToast("permission granted")
                     getLastLocation()
                 } else {
-                    Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show()
+                    this.showToast("permission denied")
                 }
             }
         }
@@ -126,11 +134,8 @@ class MainActivity : AppCompatActivity() {
         val forcastday = liste[position]
         weather.text = forcastday.day!!.condition!!.text
         degree.text = forcastday.day.avgtemp_c!!.toInt().toString() + "\u00B0"
-        Glide
-            .with(this)
-            .load("https:" + forcastday.day.condition!!.icon)
-            .override(170, 170)
-            .into(weatherImage)
+        weatherImage.loadFromUrl(Constants.url + forcastday.day.condition!!.icon)
+
 
     }
 }

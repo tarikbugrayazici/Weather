@@ -1,4 +1,4 @@
-package com.example.weather
+package com.example.weather.core.helper
 
 import android.Manifest
 import android.app.Activity
