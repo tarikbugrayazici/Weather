@@ -7,9 +7,11 @@ import com.example.weather.data.service.API
 import com.example.weather.data.service.RetrofitService
 import retrofit2.Response
 
-class Repository() {
+class WeatherRepository() {
 
-    fun service(cityName: String, block: (ArrayList<Forcastday>?) -> Unit) {
+    private var weather = ArrayList<Forcastday>()
+
+    fun getWeatherForecast(cityName: String, block: (ArrayList<Forcastday>?) -> Unit) {
         val retrofit: API = RetrofitService.getRetrofit()!!.create(API::class.java)
         val call = retrofit.getWeather(Constants.API_KEY, cityName!!, 7)
         call.enqueue(object : retrofit2.Callback<BaseEntity> {

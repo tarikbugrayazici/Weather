@@ -1,42 +1,31 @@
 package com.example.weather.ui.view
 
-import android.Manifest
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.annotation.StyleRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.weather.PermissionHelper
 import com.example.weather.R
-import com.example.weather.data.Constants
-import com.example.weather.data.entity.BaseEntity
 import com.example.weather.data.entity.Forcastday
-import com.example.weather.data.service.API
-import com.example.weather.data.service.RetrofitService
-import com.example.weather.ui.Repository
 import com.example.weather.ui.SharedPref
 import com.example.weather.ui.adapter.MainActivityAdapter
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Response
 import java.util.*
 import kotlin.collections.ArrayList
 
+@Suppress("IMPLICIT_BOXING_IN_IDENTITY_EQUALS")
 class MainActivity : AppCompatActivity() {
     private var layoutManager: LinearLayoutManager? = null
     private var adapter: MainActivityAdapter? = null
@@ -44,27 +33,25 @@ class MainActivity : AppCompatActivity() {
     private var cityName: String? = null
     private var longtitude: Double? = null
     private var latitude: Double? = null
-
     lateinit var mFusedLocationClient: FusedLocationProviderClient
-    private val TAG = "PermissionDemo"
-    private val REQUEST_CODE = 101
     internal lateinit var mSharedPref: SharedPref
-    private val myPreferences: String = "nightMode"
-    private val key: String = "isNightMode"
+    private val REQUEST_CODE = 101
+    private lateinit var viewModel: MainActivityViewModel
+    private val permissionHelper: PermissionHelper by lazy { PermissionHelper(this) }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         mSharedPref = SharedPref(this)
-        if (mSharedPref.loadNightModeState() === true) {
-            setTheme(R.style.DarkTheme);
-        } else {
-            setTheme(R.style.LightTheme);
-        }
+        if (mSharedPref.loadNightModeState() === true)
+            setTheme(R.style.DarkTheme)
+        else
+            setTheme(R.style.LightTheme)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         recyclerView.visibility = View.GONE
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        checkPermission()
+        permissionHelper.checkPermission { getLastLocation() }
         if (mSharedPref.loadNightModeState() == true)
             toggle.isChecked = true
 
@@ -77,7 +64,11 @@ class MainActivity : AppCompatActivity() {
             finish()
             startActivity(getIntent())
         }
-
+        viewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
+        viewModel.getLastWeather()
+        viewModel.weatherLiveData.observe(this, androidx.lifecycle.Observer {
+            setRecyclerView(it)
+        })
     }
 
     override fun onRequestPermissionsResult(
@@ -99,14 +90,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun getLastLocation() {
         mFusedLocationClient.lastLocation.addOnCompleteListener(this) { task ->
-            var location: Location? = task.result
+            val location: Location? = task.result
+
             longtitude = location!!.longitude
             latitude = location.latitude
             val geocoder = Geocoder(
                 this,
                 Locale.getDefault()
-            );
-            var address: ArrayList<Address>
+            )
+            val address: ArrayList<Address>
             address =
                 geocoder.getFromLocation(
                     latitude!!,
@@ -115,35 +107,8 @@ class MainActivity : AppCompatActivity() {
                 ) as ArrayList<Address>
             cityName = address.get(0).adminArea
             locationAddress.text = cityName
-            val repository = Repository()
-            repository.service(cityName!!) { list -> setRecyclerView(list!!) }
-
         }
     }
-
-    fun checkPermission() {
-        val permission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "Permission denied")
-            makeRequest()
-        } else {
-            Toast.makeText(this, "Permission already granted", Toast.LENGTH_LONG).show()
-            getLastLocation()
-        }
-    }
-
-    private fun makeRequest() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            REQUEST_CODE
-        )
-    }
-
 
     private fun setRecyclerView(list: ArrayList<Forcastday>) {
         recyclerView.visibility = View.VISIBLE
@@ -156,14 +121,16 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
     }
 
+    @SuppressLint("SetTextI18n")
     private fun setItems(position: Int) {
         val forcastday = liste[position]
         weather.text = forcastday.day!!.condition!!.text
-        degree.text = forcastday.day!!.avgtemp_c!!.toInt().toString() + "\u00B0"
+        degree.text = forcastday.day.avgtemp_c!!.toInt().toString() + "\u00B0"
         Glide
             .with(this)
-            .load("https:" + forcastday.day!!.condition!!.icon)
+            .load("https:" + forcastday.day.condition!!.icon)
             .override(170, 170)
             .into(weatherImage)
+
     }
 }
